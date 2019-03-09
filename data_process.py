@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import os
 
@@ -24,10 +26,9 @@ def detect(image, cascade_file="haarcascade_frontalface_alt.xml"):
     if not os.path.isfile(cascade_file):
         raise RuntimeError("%s: not found" % cascade_file)
     cascade = cv2.CascadeClassifier(cascade_file)
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    gray = cv2.equalizeHist(gray)
-
-    face_coords = cascade.detectMultiScale(gray,
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    image = cv2.equalizeHist(image)
+    face_coords = cascade.detectMultiScale(image,
                                            # detector options
                                            scaleFactor=1.1,
                                            minNeighbors=5,
@@ -81,6 +82,12 @@ def get_sample(video_dir, subject_id, outdir):
 
 
 if __name__ == '__main__':
+    with open('config/path.json', 'r') as fp:
+        path_config = json.load(fp)
+    root_dir = path_config['windows']
+    video_dir = root_dir / 'RECOLA-Video-recordings'
+    anno_dir = root_dir / 'RECOLA-Annotation/emotional_behaviour'
+    outdir = root_dir / 'recola_out'
     # all_subject_ids = []
     # for ids in portion_to_id.values():
     #     all_subject_ids.extend(ids)
