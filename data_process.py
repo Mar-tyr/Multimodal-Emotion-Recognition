@@ -84,13 +84,15 @@ def get_sample(video_dir, subject_id, outdir):
 if __name__ == '__main__':
     with open('config/path.json', 'r') as fp:
         path_config = json.load(fp)
-    root_dir = path_config['windows']
+    root_dir = path_config['gpu_025']
     video_dir = root_dir / 'RECOLA-Video-recordings'
     anno_dir = root_dir / 'RECOLA-Annotation/emotional_behaviour'
     outdir = root_dir / 'recola_out'
-    # all_subject_ids = []
-    # for ids in portion_to_id.values():
-    #     all_subject_ids.extend(ids)
-    # for subject_id in all_subject_ids:
-    #     get_sample(video_dir, subject_id, outdir)
-    get_sample(video_dir, 16, outdir)
+
+    all_subject_ids = set()
+    for ids in portion_to_id.values():
+        all_subject_ids.update(ids)
+    all_subject_ids.remove(17)
+    for subject_id in all_subject_ids:
+        print(subject_id)
+        get_sample(video_dir, subject_id, outdir)
