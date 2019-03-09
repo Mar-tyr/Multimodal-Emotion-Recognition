@@ -1,19 +1,13 @@
 import json
-
-import numpy as np
 import os
-
-import pandas as pd
-from PIL import Image
-from io import BytesIO
-from pathlib import Path
-from moviepy.editor import VideoFileClip, AudioFileClip
-import matplotlib.pyplot as plt
-import scipy.misc
-from tqdm import trange, tqdm
-import cv2
 import os.path as osp
-import multiprocessing
+from pathlib import Path
+import cv2
+import numpy as np
+import pandas as pd
+import scipy.misc
+from moviepy.editor import VideoFileClip, AudioFileClip
+from tqdm import trange
 
 portion_to_id = dict(
     train=[17, 43, 30, 28, 46, 19, 41, 26, 62, 39, 25, 56],  # 25
@@ -39,7 +33,7 @@ def detect(image, cascade_file="haarcascade_frontalface_alt.xml"):
     else:
         face_coord = face_coords[0]
         x, y, w, h = face_coord
-        face = gray[y: y + h, x:x + w]
+        face = image[y: y + h, x:x + w]
         face = cv2.resize(face, (48, 48))
         return face, face_coord
 
@@ -84,7 +78,7 @@ def get_sample(video_dir, subject_id, outdir):
 if __name__ == '__main__':
     with open('config/path.json', 'r') as fp:
         path_config = json.load(fp)
-    root_dir = path_config['gpu_025']
+    root_dir = Path(path_config['gpu_025'])
     video_dir = root_dir / 'RECOLA-Video-recordings'
     anno_dir = root_dir / 'RECOLA-Annotation/emotional_behaviour'
     outdir = root_dir / 'recola_out'
