@@ -16,41 +16,11 @@ portion_to_id = dict(
 )
 
 
-def detect(image, cascade_file="haarcascade_frontalface_alt.xml"):
-    if not os.path.isfile(cascade_file):
-        raise RuntimeError("%s: not found" % cascade_file)
-    cascade = cv2.CascadeClassifier(cascade_file)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    image = cv2.equalizeHist(image)
-    face_coords = cascade.detectMultiScale(image,
-                                           # detector options
-                                           scaleFactor=1.1,
-                                           minNeighbors=5,
-                                           minSize=(48, 48))
-
-    if len(face_coords) == 0:
-        return None
-    else:
-        face_coord = face_coords[0]
-        x, y, w, h = face_coord
-        face = image[y: y + h, x:x + w]
-        face = cv2.resize(face, (48, 48))
-        return face, face_coord
-
-
 def get_sample(video_dir, subject_id, outdir):
-    coord_df = pd.DataFrame(columns=['x', 'y', 'w', 'h'])
     mp4_path = video_dir / 'P{}.mp4'.format(subject_id)
     clip = VideoFileClip(str(mp4_path))
     subsampled_audio: AudioFileClip = clip.audio.set_fps(16000)
-    subject_videodir = outdir / 'Video/{}'.format(subject_id)
-    subject_coorddir = subject_videodir / 'coords'
-    subject_fullimgdir = subject_videodir / 'full_img'
     subject_audiodir = outdir / 'Audio/{}'.format(subject_id)
-    if not osp.isdir(str(subject_fullimgdir)):
-        os.makedirs(str(subject_fullimgdir))
-    if not osp.isdir(str(subject_coorddir)):
-        os.makedirs(str(subject_coorddir))
     if not osp.isdir(str(subject_audiodir)):
         os.makedirs(str(subject_audiodir))
     audio_frames = []
@@ -60,19 +30,8 @@ def get_sample(video_dir, subject_id, outdir):
         audio = np.array(list(subsampled_audio.subclip(start_time, end_time).iter_frames()))
         audio = audio.mean(1)[:640]
         audio_frames.append(audio)
-        frame = np.array(list(clip.subclip(start_time, end_time).iter_frames()))[0]
-        detect_res = detect(frame)
-        if detect_res:
-            face, face_coord = detect_res
-            face_path = subject_videodir / '{}_{}.jpg'.format(subject_id, i)
-            scipy.misc.imsave(face_path, face)
-            coord_df.loc[i] = face_coord
-        else:
-            fullimg_path = subject_fullimgdir / '{}_{}.jpg'.format(subject_id, i)
-            scipy.misc.imsave(fullimg_path, cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
     audio_frames = np.vstack(audio_frames)
     np.save(str(subject_audiodir / '{}.npy'.format(subject_id)), audio_frames)
-    coord_df.to_pickle(str(subject_coorddir / 'coords.pkl'))
 
 
 if __name__ == '__main__':
